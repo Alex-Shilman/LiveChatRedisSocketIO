@@ -11,6 +11,7 @@ var normalizePort = require('./utils').normalizePort;
 var redis = require('redis');
 var app = express();
 var redisClient = redis.createClient();
+
 redisClient.once('ready', function(){
     redisClient.get('chat_users', function(err, reply){
        if(reply){
@@ -41,7 +42,7 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', routes);
-app.use('/users', users);
+app.use('/users', users(app, redisClient, chatters, chat_messages));
 
 
 // catch 404 and forward to error handler
@@ -79,7 +80,7 @@ io.on('connection', function(socket){
     socket.on('message', function(data){
        io.emit('send', data);
     });
-    
+
     socket.on('update_chatter_count', function(data){
         io.emit('count_chatters', data);
     })
